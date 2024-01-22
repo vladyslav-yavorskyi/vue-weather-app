@@ -1,4 +1,3 @@
-// src/hooks/fetchData.js
 import { ref, watch, toRef } from 'vue'
 import axios from "axios";
 
@@ -8,7 +7,6 @@ export function useFetch(urlRef) {
     const isLoading = ref(false)
 
     const fetchData = async () => {
-        // reset state before fetching..
         data.value = null
         isError.value = null
         isLoading.value = true
@@ -16,7 +14,7 @@ export function useFetch(urlRef) {
         if (urlRef.value.length === 0) return;
         try {
             const response = await axios.get(urlRef.value)
-            data.value = response.data.slice(0, 5) // limit to first five items
+            data.value = response.data.slice(0, 5)
         } catch (err) {
             isError.value = err
         } finally {
@@ -26,5 +24,5 @@ export function useFetch(urlRef) {
 
     watch(urlRef, fetchData)
 
-    return { data, isError, isLoading }
+    return { data, isError, isLoading, fetchData }
 }

@@ -16,7 +16,9 @@
             :key="city.Key"
             class="py-2 px-4 hover:bg-gray-500 hover:text-white transition-colors cursor-pointer"
         >
-          {{ city.LocalizedName  }} - {{ city.Country.LocalizedName }}
+          <router-link :to="{ name: 'City', params: { cityKey: city.Key, cityName: city.LocalizedName } }">
+            {{ city.LocalizedName  }} - {{ city.Country.LocalizedName }}
+          </router-link>
         </li>
       </ul>
 
@@ -36,7 +38,7 @@ const cityName = ref('');
 
 
 const urlRef = computed(() => `${url}/locations/v1/cities/autocomplete?apikey=${key}&q=${cityName.value}`);
-const {data, isLoading, isError} = useFetch(urlRef);
+const {data, isLoading} = useFetch(urlRef);
 
 
 watch(search, debounce(() => {

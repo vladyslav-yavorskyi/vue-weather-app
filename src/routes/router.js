@@ -1,10 +1,10 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import TopLocations from "../components/TopLocations.vue";
 import Welcome from "../components/Welcome.vue";
+import City from "../components/City.vue";
 
 const routes = [
     {path: '/', component: Welcome},
-    {path: '/home', component: TopLocations}
+    {path: '/city/:cityKey', component: City, name: 'City'}
 ]
 
 export default createRouter({
