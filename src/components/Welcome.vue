@@ -16,7 +16,7 @@
             :key="city.Key"
             class="py-2 px-4 hover:bg-gray-500 hover:text-white transition-colors cursor-pointer"
         >
-          <router-link :to="{ name: 'City', params: { cityKey: city.Key, cityName: city.LocalizedName } }">
+          <router-link @click="() => setCity(city.LocalizedName)" :to="{ name: 'City', params: { cityKey: city.Key} }">
             {{ city.LocalizedName  }} - {{ city.Country.LocalizedName }}
           </router-link>
         </li>
@@ -30,6 +30,7 @@
 import {ref, computed, watch} from 'vue';
 import { debounce } from '../hooks/debounce.js';
 import {useFetch} from "../hooks/fetchData.js";
+import {store} from "../state/store.js";
 
 const url = import.meta.env.VITE_WEATHER_API_URL;
 const key = import.meta.env.VITE_WEATHER_API_KEY;
@@ -40,6 +41,9 @@ const cityName = ref('');
 const urlRef = computed(() => `${url}/locations/v1/cities/autocomplete?apikey=${key}&q=${cityName.value}`);
 const {data, isLoading} = useFetch(urlRef);
 
+const setCity = (city) => {
+  store.currentCity = city;
+}
 
 watch(search, debounce(() => {
   cityName.value = search.value;

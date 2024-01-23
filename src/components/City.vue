@@ -2,18 +2,30 @@
   <div :class="theme" class="h-screen w-screen ">
     <div class="flex justify-center items-center h-screen">
       <div class="glass-card flex justify-center items-center flex-col">
-        <h1>City </h1> <h1>{{ cityName }}</h1>
-        <div v-if="isLoading">Loading...</div>
+        <h1>City </h1> <h1>{{ store.currentCity }}</h1>
+        <div v-if="isLoadingCity">Loading...</div>
         <div v-else-if="cityData && cityData.length > 0">
           <h2>{{ cityData[0].WeatherText }}</h2>
           <p>Temperature: {{ cityData[0].Temperature.Metric.Value }}°C</p>
-          <p>Weather Icon: {{ cityData[0].WeatherIcon }}</p>
+          <img :src="getWeatherIcon(cityData[0].WeatherIcon)" alt="icon"/><!--          <p>{{// getWeatherIcon( Number(cityData[0].WeatherIcon ))}}</p>-->
           <p>Has Precipitation: {{ cityData[0].HasPrecipitation }}</p>
           <p>Precipitation Type: {{ cityData[0].PrecipitationType }}</p>
           <p>Is Day Time: {{ cityData[0].IsDayTime }}</p>
         </div>
         <div v-else>
           <p>No data available</p>
+        </div>
+        <div v-if="cityHistoryData && cityHistoryData.length" class="flex">
+          {{ cityHistoryData[0].length }}
+          <div v-for="item in cityHistoryData" :key="item.EpochTime">
+            <p>{{ getFormattedTime(item.LocalObservationDateTime) }}</p>
+            <p>{{ item.WeatherText }}</p>
+            <p>{{ item.Temperature.Metric.Value }}</p>
+            <img :src="getWeatherIcon(item.WeatherIcon)" alt="icon"/><!--          <p>{{// getWeatherIcon( Number(cityData[0].WeatherIcon ))}}</p>-->
+            <p>{{ item.HasPrecipitation }}</p>
+            <p>{{ item.PrecipitationType }}</p>
+            <p>{{ item.IsDayTime }}</p>
+          </div>
         </div>
       </div>
     </div>
@@ -22,8 +34,9 @@
 
 <script setup>
 import {useRoute} from "vue-router";
-import {onMounted, computed, ref, watch} from "vue";
+import {onMounted, computed, ref, watch, toRefs} from "vue";
 import {useFetch} from "../hooks/fetchData.js";
+import {store} from "../state/store.js";
 
 const url = import.meta.env.VITE_WEATHER_API_URL;
 const key = import.meta.env.VITE_WEATHER_API_KEY;
@@ -31,17 +44,32 @@ const key = import.meta.env.VITE_WEATHER_API_KEY;
 const route = useRoute();
 
 let cityKey = ref(route.params.cityKey);
-let cityName = ref(route.params.cityName);
 
 watch(() => route.params, (newParams) => {
   cityKey.value = newParams.cityKey;
-  cityName.value = newParams.cityName;
 });
 
+const urlHistory = computed(() => `${url}/currentconditions/v1/${cityKey.value}/historical/24?apikey=${key}`);
 const urlRef = computed(() => `${url}/currentconditions/v1/${cityKey.value}?apikey=${key}`);
-const { data: cityData, isLoading, fetchData } = useFetch(urlRef);
+const { data: cityData, isLoading: isLoadingCity, fetchData: fetchCityData } = useFetch(urlRef);
+const { data: cityHistoryData, isLoading: isLoadingHistory, fetchData: fetchHistoryData} = useFetch(urlHistory)
+onMounted(() => {
+  fetchCityData();
+  fetchHistoryData();
+})
 
-onMounted(fetchData);
+
+const getFormattedTime = (time) => {
+  let date = new Date(time);
+  let hours = date.getHours();
+  let minutes = date.getMinutes();
+  return `${hours}:${minutes}`;
+}
+
+const getWeatherIcon = (icon) => {
+    return `https://developer.accuweather.com/sites/default/files/${icon < 10 ? '0' + icon : icon}-s.png`;
+}
+console.log(getWeatherIcon(1))
 
 const theme = computed(() => {
   if (!cityData.value || cityData.value.length === 0) {
@@ -138,8 +166,22 @@ const theme = computed(() => {
 }
 
 .theme-cloudy {
-  background-color: #d3d3d3;
-  color: #000;
+  position: relative;
+  color: #FFFFFF;
+  height: 100%;
+  width: 100%;
+}
+
+.theme-cloudy::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  background-image: url('../assets/theme-backgrounds/cloudy.png');
+  background-size: cover;
+  backdrop-filter: blur(10px);
 }
 
 .theme-windy {
